@@ -1,0 +1,37 @@
+:root {
+  /* Tema Claro */
+  --bg-light: #FDFCF9;
+  --text-light: #1A1A1A;
+  --accent-light: #B08968;
+  /* Tema Escuro */
+  --bg-dark: #121212;
+  --text-dark: #EDEDED;
+  --accent-dark: #D4A373;
+  /* Tipografia */
+  --font-primary: 'Playfair Display', serif;
+}
+html { scroll-behavior: smooth; }
+body { margin: 0; padding: 0; font-family: var(--font-primary); }
+.theme-light { background: var(--bg-light); color: var(--text-light); }
+.theme-dark  { background: var(--bg-dark);  color: var(--text-dark);  }
+header { text-align: center; padding: 2rem 1rem; }
+.grid-covers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+.cover-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border: 2px solid var(--accent-light);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform .3s;
+}
+.theme-dark .cover-card { border-color: var(--accent-dark); }
+.cover-card:hover { transform: scale(1.02); }
+.cover-card img { width: 100%; height: auto; display: block; }
+.cover-card h2 { padding: .5rem; text-align: center; }
+.about-container { max-width: 600px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
