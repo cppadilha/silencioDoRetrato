@@ -236,13 +236,14 @@ main.zine-content {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden; /* Adicione esta linha */
 }
 
-.lb-content img {
-    max-width: 100%;
-    max-height: 100%;
+.lb-content canvas#maximizedCanvas { /* NOVO SELETOR PARA O CANVAS DO LIGHTBOX */
+    max-width: 100%;  /* Garante que o canvas não ultrapasse a largura do seu contêiner (.lb-content) */
+    max-height: 100%; /* Garante que o canvas não ultrapasse a altura do seu contêiner (.lb-content) */
     display: block;
-    object-fit: contain;
+    object-fit: contain; /* ESSENCIAL: Mantém a proporção e se encaixa dentro das dimensões */
     border-radius: 5px;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }

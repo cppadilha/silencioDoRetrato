@@ -9,21 +9,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     imageOverlay.innerHTML = `
         <div class="lb-content">
-            <img src="" alt="Imagem maximizada" id="maximizedImage" />
+            <canvas id="maximizedCanvas"></canvas>
             <button class="lb-close">×</button>
         </div>
     `;
 
-    const maximizedImage = document.getElementById('maximizedImage');
+    const maximizedCanvas = document.getElementById('maximizedCanvas');
+    const ctxLightbox = maximizedCanvas.getContext('2d');
+
     const closeButton = imageOverlay.querySelector('.lb-close');
 
-    function openLightbox(src) {
-        maximizedImage.src = src;
-        imageOverlay.classList.add('active');
+    // Funções para abrir e fechar o lightbox
+    function openLightbox(src, shouldWatermarkLightbox) {
+        const imgLightbox = new Image();
+        imgLightbox.crossOrigin = 'Anonymous';
+        imgLightbox.src = src;
+
+        imgLightbox.onload = () => {
+            const maxWidth = window.innerWidth * 0.9;
+            const maxHeight = window.innerHeight * 0.9;
+
+            let renderWidth = imgLightbox.width;
+            let renderHeight = imgLightbox.height;
+
+            if (renderWidth > maxWidth) {
+                renderHeight = (maxWidth / renderWidth) * renderHeight;
+                renderWidth = maxWidth;
+            }
+            if (renderHeight > maxHeight) {
+                renderWidth = (maxHeight / renderHeight) * renderWidth;
+                renderHeight = maxHeight;
+            }
+
+            maximizedCanvas.width = renderWidth;
+            maximizedCanvas.height = renderHeight;
+
+            // PRIMEIRO DESENHA A IMAGEM
+            ctxLightbox.drawImage(imgLightbox, 0, 0, renderWidth, renderHeight);
+
+            // DEPOIS APLICA A MARCA D'ÁGUA, SE shouldWatermarkLightbox for true
+            if (shouldWatermarkLightbox) {
+                const lightboxWatermarkText = watermarkTextDefault;
+                const lightboxWatermarkColor = 'rgba(0, 0, 0, 0.3)';
+                const lightboxWatermarkFont = 'bold ' + (maximizedCanvas.width * 0.05) + 'px Playfair Display';
+                const lightboxWatermarkRotation = -Math.PI / 6;
+
+                drawWatermark(ctxLightbox, maximizedCanvas.width, maximizedCanvas.height,
+                             lightboxWatermarkText, lightboxWatermarkColor, lightboxWatermarkFont, lightboxWatermarkRotation);
+            }
+
+            imageOverlay.classList.add('active');
+        };
+
+        imgLightbox.onerror = () => {
+            console.error('Erro ao carregar a imagem para o lightbox:', src);
+            maximizedCanvas.width = 400;
+            maximizedCanvas.height = 300;
+            ctxLightbox.font = '30px Arial';
+            ctxLightbox.fillStyle = 'red';
+            ctxLightbox.textAlign = 'center';
+            ctxLightbox.fillText('Erro ao carregar imagem', maximizedCanvas.width / 2, maximizedCanvas.height / 2);
+            imageOverlay.classList.add('active');
+        };
     }
 
     function closeLightbox() {
         imageOverlay.classList.remove('active');
+        ctxLightbox.clearRect(0, 0, maximizedCanvas.width, maximizedCanvas.height);
     }
 
     closeButton.addEventListener('click', closeLightbox);
@@ -34,30 +86,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- Lógica da Marca D'água e Carregamento de Imagens ---
-    // *** CONTROLE DA MARCA D'ÁGUA: Defina true para exibir, false para não exibir ***
-    const displayWatermark = true; // Altere para 'false' se não quiser a marca d'água
+    // --- Lógica da Marca D'água e Carregamento de Imagens da Galeria ---
+    const watermarkTextDefault = 'Carla Padilha';
+    const watermarkColorDefault = 'rgba(255, 255, 255, 0.4)'; // Opacidade para o texto da marca d'água
+    const watermarkFontDefault = 'bold 40px Playfair Display';
+    const watermarkRotationDefault = -Math.PI / 6;
 
-    const watermarkText = 'Carla Padilha';
-    const watermarkColor = 'rgba(255, 255, 255, 0.4)';
-    const watermarkFont = 'bold 40px Playfair Display';
-    const watermarkRotation = -Math.PI / 6;
-
-    function drawWatermark(ctx, canvasWidth, canvasHeight) {
+    function drawWatermark(ctx, canvasWidth, canvasHeight, text, color, font, rotation) {
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
-        tempCanvas.width = 400;
+        tempCanvas.width = 400; // Base para o tamanho do padrão
         tempCanvas.height = 400;
 
-        tempCtx.font = watermarkFont;
-        tempCtx.fillStyle = watermarkColor;
+        tempCtx.font = font;
+        tempCtx.fillStyle = color;
         tempCtx.textAlign = 'center';
         tempCtx.textBaseline = 'middle';
 
         tempCtx.save();
         tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
-        tempCtx.rotate(watermarkRotation);
-        tempCtx.fillText(watermarkText, 0, 0);
+        tempCtx.rotate(rotation);
+        tempCtx.fillText(text, 0, 0);
         tempCtx.restore();
 
         const pattern = ctx.createPattern(tempCanvas, 'repeat');
@@ -67,6 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function processImage(canvasElement) {
         const originalSrc = canvasElement.getAttribute('data-original-src');
+        const shouldDisplayWatermark = canvasElement.getAttribute('watermark-display') === 'true';
+
         const ctx = canvasElement.getContext('2d');
         const img = new Image();
         img.crossOrigin = 'Anonymous';
@@ -75,15 +126,18 @@ document.addEventListener('DOMContentLoaded', () => {
         img.onload = () => {
             canvasElement.width = img.width;
             canvasElement.height = img.height;
+
+            // PRIMEIRO DESENHA A IMAGEM NA GALERIA
             ctx.drawImage(img, 0, 0);
 
-            // Aplica a marca d'água SE a variável 'displayWatermark' for true
-            if (displayWatermark) {
-                drawWatermark(ctx, canvasElement.width, canvasElement.height);
+            // DEPOIS APLICA A MARCA D'ÁGUA, SE shouldDisplayWatermark for true
+            if (shouldDisplayWatermark) {
+                drawWatermark(ctx, canvasElement.width, canvasElement.height,
+                             watermarkTextDefault, watermarkColorDefault, watermarkFontDefault, watermarkRotationDefault);
             }
 
             canvasElement.onclick = () => {
-                openLightbox(originalSrc);
+                openLightbox(originalSrc, shouldDisplayWatermark);
             };
         };
 
@@ -94,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.textAlign = 'center';
             ctx.fillText('Erro ao carregar', canvasElement.width / 2, canvasElement.height / 2);
             canvasElement.onclick = () => {
-                openLightbox(originalSrc);
+                openLightbox(originalSrc, shouldDisplayWatermark);
             };
         };
     }
