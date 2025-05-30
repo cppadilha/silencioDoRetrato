@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (shouldWatermarkLightbox) {
                 const lightboxWatermarkText = watermarkTextDefault;
                 const lightboxWatermarkColor = 'rgba(0, 0, 0, 0.3)';
-                const lightboxWatermarkFont = 'bold ' + (maximizedCanvas.width * 0.05) + 'px Playfair Display';
+                const lightboxWatermarkFont = 'bold ' + (maximizedCanvas.width * 0.08) + 'px Playfair Display';
                 const lightboxWatermarkRotation = -Math.PI / 6;
 
                 drawWatermark(ctxLightbox, maximizedCanvas.width, maximizedCanvas.height,
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Lógica da Marca D'água e Carregamento de Imagens da Galeria ---
-    const watermarkTextDefault = 'Carla Padilha';
+    const watermarkTextDefault = 'Silêncio do Retrato';
     const watermarkColorDefault = 'rgba(255, 255, 255, 0.4)'; // Opacidade para o texto da marca d'água
     const watermarkFontDefault = 'bold 40px Playfair Display';
     const watermarkRotationDefault = -Math.PI / 6;
