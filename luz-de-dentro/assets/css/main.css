@@ -1,0 +1,34 @@
+.section-abertura-background {
+    background-image: url('../images/Cover.jpg'); /* O caminho para sua imagem */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: scroll; /* A imagem rola com a seção */
+    /*background-attachment: fixed; /* <--- Esta linha causa o efeito de paralaxe */
+
+    padding: 80px 20px;
+    min-height: 400px; /* Garante altura suficiente para a imagem e conteúdo */
+    margin: 0 auto 2rem;
+
+    color: white; /* Cor do texto */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7); /* Sombra para o texto se destacar */
+}
+.section-abertura-background h3 {
+    color: #baafa7;
+}
+
+.content-center {
+    display: flex;          /* Ativa o flexbox */
+    align-items: center;    /* Centraliza os itens verticalmente (no eixo cruzado) */
+    justify-content: center; /* Centraliza os itens horizontalmente (no eixo principal) */
+    flex-direction: column; /* Garante que os itens fiquem em coluna */
+    text-align: center;    /* Garante que o próprio texto seja centralizado dentro do h2 */
+}
+
+.content-single {
+    width: 400px;
+}
+
+.manifesto p {
+    text-align: left;
+}

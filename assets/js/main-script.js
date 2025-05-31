@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (shouldWatermarkLightbox) {
                 const lightboxWatermarkText = watermarkTextDefault;
                 const lightboxWatermarkColor = 'rgba(0, 0, 0, 0.3)';
-                const lightboxWatermarkFont = 'bold ' + (maximizedCanvas.width * 0.08) + 'px Playfair Display';
+                const lightboxWatermarkFont = 'bold 20px Playfair Display';
                 const lightboxWatermarkRotation = -Math.PI / 6;
 
                 drawWatermark(ctxLightbox, maximizedCanvas.width, maximizedCanvas.height,
@@ -95,8 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function drawWatermark(ctx, canvasWidth, canvasHeight, text, color, font, rotation) {
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
-        tempCanvas.width = 400; // Base para o tamanho do padrão
-        tempCanvas.height = 400;
+        tempCanvas.width = canvasWidth * 0.5 > 120 ? canvasWidth * 0.5 : 120; // Base para o tamanho do padrão
+        tempCanvas.height = canvasHeight * 0.5 > 120 ? canvasHeight * 0.5 : 120;
 
         tempCtx.font = font;
         tempCtx.fillStyle = color;
