@@ -1,0 +1,20 @@
+
+.section-abertura-background h3 {
+    color: #baafa7;
+}
+
+.content-center {
+    display: flex;          /* Ativa o flexbox */
+    align-items: center;    /* Centraliza os itens verticalmente (no eixo cruzado) */
+    justify-content: center; /* Centraliza os itens horizontalmente (no eixo principal) */
+    flex-direction: column; /* Garante que os itens fiquem em coluna */
+    text-align: center;    /* Garante que o próprio texto seja centralizado dentro do h2 */
+}
+
+.content-single {
+    width: 400px;
+}
+
+.manifesto p {
+    text-align: left;
+}
