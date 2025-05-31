@@ -1,6 +1,10 @@
 // assets/js/main-script.js
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- Variáveis para controle da galeria e lightbox ---
+    let currentGalleryImages = []; // Array para armazenar as URLs das imagens da galeria atual
+    let currentImageIndex = -1;  // Índice da imagem atualmente exibida no lightbox
+
     // --- Lógica do Lightbox ---
     const imageOverlay = document.createElement('div');
     imageOverlay.id = 'imageOverlay';
@@ -11,13 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="lb-content">
             <canvas id="maximizedCanvas"></canvas>
             <button class="lb-close">×</button>
-        </div>
+            <button class="lb-nav lb-prev">❮</button> <button class="lb-nav lb-next">❯</button> </div>
     `;
 
     const maximizedCanvas = document.getElementById('maximizedCanvas');
     const ctxLightbox = maximizedCanvas.getContext('2d');
 
     const closeButton = imageOverlay.querySelector('.lb-close');
+    const prevButton = imageOverlay.querySelector('.lb-prev'); // Referência ao botão Anterior
+    const nextButton = imageOverlay.querySelector('.lb-next'); // Referência ao botão Próximo
 
     // Funções para abrir e fechar o lightbox
     function openLightbox(src, shouldWatermarkLightbox) {
@@ -51,14 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (shouldWatermarkLightbox) {
                 const lightboxWatermarkText = watermarkTextDefault;
                 const lightboxWatermarkColor = 'rgba(0, 0, 0, 0.3)';
-                const lightboxWatermarkFont = 'bold 20px Playfair Display';
-                const lightboxWatermarkRotation = -Math.PI / 6;
+                const lightboxWatermarkFont = 'bold 20px Playfair Display'; // Usando 20px fixo, pode ajustar
 
                 drawWatermark(ctxLightbox, maximizedCanvas.width, maximizedCanvas.height,
-                             lightboxWatermarkText, lightboxWatermarkColor, lightboxWatermarkFont, lightboxWatermarkRotation);
+                             lightboxWatermarkText, lightboxWatermarkColor, lightboxWatermarkFont, watermarkRotationDefault);
             }
 
             imageOverlay.classList.add('active');
+            updateNavButtons(); // Atualiza visibilidade dos botões após carregar imagem
         };
 
         imgLightbox.onerror = () => {
@@ -70,12 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
             ctxLightbox.textAlign = 'center';
             ctxLightbox.fillText('Erro ao carregar imagem', maximizedCanvas.width / 2, maximizedCanvas.height / 2);
             imageOverlay.classList.add('active');
+            updateNavButtons(); // Atualiza visibilidade dos botões mesmo com erro
         };
     }
 
     function closeLightbox() {
         imageOverlay.classList.remove('active');
         ctxLightbox.clearRect(0, 0, maximizedCanvas.width, maximizedCanvas.height);
+        currentGalleryImages = []; // Limpa o array ao fechar o lightbox
+        currentImageIndex = -1; // Reseta o índice
     }
 
     closeButton.addEventListener('click', closeLightbox);
@@ -85,18 +94,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Função para atualizar a imagem no lightbox (chamada pelos botões)
+    function updateLightboxImage() {
+        const src = currentGalleryImages[currentImageIndex];
+        // Encontra o canvas original para verificar o atributo watermark-display
+        const originalCanvas = document.querySelector('.gallery canvas[data-original-src="' + src + '"]');
+        const shouldWatermark = originalCanvas ? originalCanvas.getAttribute('watermark-display') === 'true' : false;
+
+        openLightbox(src, shouldWatermark); // Reutiliza a função openLightbox
+    }
+
+    // Função para atualizar o estado dos botões de navegação
+    function updateNavButtons() {
+        prevButton.style.display = (currentImageIndex === 0) ? 'none' : 'block';
+        nextButton.style.display = (currentImageIndex === currentGalleryImages.length - 1) ? 'none' : 'block';
+    }
+
+
+    // Event listeners para os botões de navegação
+    prevButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // Evita que o clique no botão feche o lightbox
+        if (currentImageIndex > 0) {
+            currentImageIndex--;
+            updateLightboxImage();
+        }
+    });
+
+    nextButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // Evita que o clique no botão feche o lightbox
+        if (currentImageIndex < currentGalleryImages.length - 1) {
+            currentImageIndex++;
+            updateLightboxImage();
+        }
+    });
 
     // --- Lógica da Marca D'água e Carregamento de Imagens da Galeria ---
     const watermarkTextDefault = 'Silêncio do Retrato';
-    const watermarkColorDefault = 'rgba(255, 255, 255, 0.4)'; // Opacidade para o texto da marca d'água
+    const watermarkColorDefault = 'rgba(255, 255, 255, 0.4)';
     const watermarkFontDefault = 'bold 40px Playfair Display';
     const watermarkRotationDefault = -Math.PI / 6;
 
     function drawWatermark(ctx, canvasWidth, canvasHeight, text, color, font, rotation) {
+        ctx.save();
+
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
-        tempCanvas.width = canvasWidth * 0.5 > 120 ? canvasWidth * 0.5 : 120; // Base para o tamanho do padrão
-        tempCanvas.height = canvasHeight * 0.5 > 120 ? canvasHeight * 0.5 : 120;
+        tempCanvas.width = canvasWidth * 0.3 > 120 ? canvasWidth * 0.3 : 120;
+        tempCanvas.height = canvasHeight * 0.3 > 120 ? canvasHeight * 0.3 : 120;
 
         tempCtx.font = font;
         tempCtx.fillStyle = color;
@@ -112,6 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const pattern = ctx.createPattern(tempCanvas, 'repeat');
         ctx.fillStyle = pattern;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+        ctx.restore();
     }
 
     function processImage(canvasElement) {
@@ -127,17 +173,19 @@ document.addEventListener('DOMContentLoaded', () => {
             canvasElement.width = img.width;
             canvasElement.height = img.height;
 
-            // PRIMEIRO DESENHA A IMAGEM NA GALERIA
             ctx.drawImage(img, 0, 0);
 
-            // DEPOIS APLICA A MARCA D'ÁGUA, SE shouldDisplayWatermark for true
             if (shouldDisplayWatermark) {
                 drawWatermark(ctx, canvasElement.width, canvasElement.height,
                              watermarkTextDefault, watermarkColorDefault, watermarkFontDefault, watermarkRotationDefault);
             }
 
             canvasElement.onclick = () => {
-                openLightbox(originalSrc, shouldDisplayWatermark);
+                // Ao clicar, populamos o array de imagens da galeria atual
+                currentGalleryImages = Array.from(document.querySelectorAll('.gallery canvas[data-original-src]')).map(canvas => canvas.getAttribute('data-original-src'));
+                currentImageIndex = currentGalleryImages.indexOf(originalSrc); // Encontra o índice da imagem clicada
+
+                openLightbox(originalSrc, shouldDisplayWatermark); // Abre o lightbox com a imagem clicada
             };
         };
 
@@ -148,6 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.textAlign = 'center';
             ctx.fillText('Erro ao carregar', canvasElement.width / 2, canvasElement.height / 2);
             canvasElement.onclick = () => {
+                currentGalleryImages = Array.from(document.querySelectorAll('.gallery canvas[data-original-src]')).map(canvas => canvas.getAttribute('data-original-src'));
+                currentImageIndex = currentGalleryImages.indexOf(originalSrc);
                 openLightbox(originalSrc, shouldDisplayWatermark);
             };
         };

@@ -307,6 +307,47 @@ footer a:hover {
     text-decoration: underline;
 }
 
+/* Estilos para os botões de navegação do Lightbox */
+.lb-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 30px; /* Tamanho do ícone/texto */
+    cursor: pointer;
+    z-index: 10000; /* Acima da imagem, mas abaixo do botão de fechar */
+    transition: background-color 0.3s ease;
+    border-radius: 4px;
+    user-select: none; /* Impede seleção de texto */
+}
+
+.lb-nav:hover {
+    background: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao passar o mouse */
+}
+
+.lb-prev {
+    left: 20px; /* Posição à esquerda */
+}
+
+.lb-next {
+    right: 20px; /* Posição à direita */
+}
+
+/* Esconde os botões quando não são necessários (primeira/última imagem) */
+.lb-nav[style*="display: none"] { /* Garante que o CSS sobrescreva o display: none do JS */
+    opacity: 0;
+    pointer-events: none; /* Desabilita interações de clique */
+}
+
+/* Estilo para quando os botões estão desabilitados (opcional, pode ser usado junto com display:none do JS) */
+.lb-nav:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Media Queries para Responsividade */
 @media (max-width: 768px) {
     header h1 { font-size: 2.5rem; }
