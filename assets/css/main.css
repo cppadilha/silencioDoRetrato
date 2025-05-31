@@ -207,6 +207,10 @@ main.zine-content {
     font-style: italic;
 }
 
+.manifesto p {
+    text-align: left;
+}
+
 /* Gallery and Canvas Styles */
 .gallery {
   display: grid;
