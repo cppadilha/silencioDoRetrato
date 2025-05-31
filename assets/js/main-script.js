@@ -4,7 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Variáveis para controle da galeria e lightbox ---
     let currentGalleryImages = [];
     let currentImageIndex = -1;
-    let isZoomed = false; // NOVO: Estado do zoom (false = ajustado à tela, true = zoom in)
+    let isZoomed = false; // Estado do zoom (false = ajustado à tela, true = zoom in)
+    let isPanning = false; // Estado do pan
+    let startPanX = 0; // Posição X inicial do mouse ao iniciar o pan
+    let startPanY = 0; // Posição Y inicial do mouse ao iniciar o pan
+    let currentPanX = 0; // Offset X atual da imagem no canvas (deslocamento)
+    let currentPanY = 0; // Offset Y atual da imagem no canvas (deslocamento)
+    let loadedLightboxImage = null; // Armazenará a imagem carregada para o lightbox
 
     // --- Lógica do Lightbox ---
     const imageOverlay = document.createElement('div');
@@ -30,10 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Funções para abrir e fechar o lightbox
     function openLightbox(src, shouldWatermarkLightbox) {
-        isZoomed = false; // Reseta o zoom ao abrir uma nova imagem no lightbox
-        drawLightboxContent(src, shouldWatermarkLightbox, false); // Chama a função que desenha (initially not zoomed)
+        // Reseta todos os estados ao abrir um novo lightbox
+        isZoomed = false;
+        isPanning = false;
+        currentPanX = 0;
+        currentPanY = 0;
+        loadedLightboxImage = null; // Zera a imagem para forçar um novo carregamento
+
+        // Inicia o carregamento da imagem e o desenho do lightbox
+        loadImageAndDraw(src, shouldWatermarkLightbox, false); // 'false' para iniciar sem zoom
         imageOverlay.classList.add('active');
-        updateNavButtons();
+        updateNavButtons(); // Atualiza visibilidade dos botões
     }
 
     function closeLightbox() {
@@ -41,99 +54,34 @@ document.addEventListener('DOMContentLoaded', () => {
         ctxLightbox.clearRect(0, 0, maximizedCanvas.width, maximizedCanvas.height);
         currentGalleryImages = [];
         currentImageIndex = -1;
-        isZoomed = false; // Garante que o estado de zoom seja resetado
+        isZoomed = false;
+        isPanning = false;
+        currentPanX = 0;
+        currentPanY = 0;
+        loadedLightboxImage = null; // Libera a referência à imagem
     }
 
     closeButton.addEventListener('click', closeLightbox);
     imageOverlay.addEventListener('click', (event) => {
-        if (event.target === imageOverlay) {
+        if (event.target === imageOverlay) { // Clica no background para fechar
             closeLightbox();
         }
     });
 
-    // Função que desenha o conteúdo do lightbox, com ou sem zoom
-    function drawLightboxContent(src, shouldWatermarkLightbox, zoomIn) {
-        const imgLightbox = new Image();
-        imgLightbox.crossOrigin = 'Anonymous';
-        imgLightbox.src = src;
+    // NOVO: Função para carregar a imagem UMA VEZ e então desenhá-la
+    function loadImageAndDraw(src, shouldWatermarkLightbox, zoomState) {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = src;
 
-        imgLightbox.onload = () => {
-            let finalRenderWidth, finalRenderHeight;
-            const zoomFactor = 1.5; // Fator de zoom
-
-            // --- PASSO 1: CALCULAR O TAMANHO DA IMAGEM SE ESTIVESSE AJUSTADA À TELA (BASE) ---
-            const maxWidthFit = window.innerWidth * 0.9;
-            const maxHeightFit = window.innerHeight * 0.9;
-
-            let baseRenderWidth = imgLightbox.width;
-            let baseRenderHeight = imgLightbox.height;
-
-            // Ajusta a imagem para caber na tela (calcula o tamanho base)
-            if (baseRenderWidth > maxWidthFit) {
-                baseRenderHeight = (maxWidthFit / baseRenderWidth) * baseRenderHeight;
-                baseRenderWidth = maxWidthFit;
-            }
-            if (baseRenderHeight > maxHeightFit) {
-                baseRenderWidth = (maxHeightFit / baseRenderHeight) * baseRenderWidth;
-                baseRenderHeight = maxHeightFit;
-            }
-            // --- FIM DO CÁLCULO BASE ---
-
-            // --- PASSO 2: DETERMINAR O TAMANHO FINAL COM BASE NO ZOOM ---
-            if (zoomIn) {
-                finalRenderWidth = baseRenderWidth * zoomFactor;
-                finalRenderHeight = baseRenderHeight * zoomFactor;
-
-                // NOVO: Limitando o zoom máximo para não criar um canvas GIGANTE desnecessário
-                // Se a imagem original já é enorme, o zoom não deve ultrapassar um limite razoável
-                // Ex: não mais que 2x o tamanho original ou 2000px, o que for menor
-                const maxAllowedZoomWidth = Math.min(imgLightbox.width * 2, 2000);
-                const maxAllowedZoomHeight = Math.min(imgLightbox.height * 2, 2000);
-
-                if (finalRenderWidth > maxAllowedZoomWidth) {
-                    finalRenderHeight = (maxAllowedZoomWidth / finalRenderWidth) * finalRenderHeight;
-                    finalRenderWidth = maxAllowedZoomWidth;
-                }
-                if (finalRenderHeight > maxAllowedZoomHeight) {
-                    finalRenderWidth = (maxAllowedZoomHeight / finalRenderHeight) * finalRenderWidth;
-                    finalRenderHeight = maxAllowedZoomHeight;
-                }
-
-            } else { // Ajustar à tela
-                finalRenderWidth = baseRenderWidth;
-                finalRenderHeight = baseRenderHeight;
-            }
-
-            // --- PASSO 3: REDIMENSIONAR O CANVAS E DESENHAR ---
-            maximizedCanvas.width = finalRenderWidth; // Redimensiona o canvas, limpando seu conteúdo
-            maximizedCanvas.height = finalRenderHeight;
-
-            // Limpa o canvas ANTES de desenhar (redundante se width/height mudam, mas boa prática)
-            ctxLightbox.clearRect(0, 0, maximizedCanvas.width, maximizedCanvas.height);
-
-            // Desenha a imagem na nova dimensão. Começa em (0,0) do próprio canvas.
-            ctxLightbox.drawImage(imgLightbox, 0, 0, finalRenderWidth, finalRenderHeight);
-
-            // NOVO: Removemos o posicionamento absoluto via JS. O CSS fará o trabalho de centralizar.
-            maximizedCanvas.style.left = '';
-            maximizedCanvas.style.top = '';
-            maximizedCanvas.style.position = '';
-
-
-            // Sempre aplica a marca d'água DEPOIS da imagem
-            if (shouldWatermarkLightbox) {
-                const lightboxWatermarkText = watermarkTextDefault;
-                const lightboxWatermarkColor = 'rgba(0, 0, 0, 0.3)';
-                const lightboxWatermarkFont = 'bold 20px Playfair Display';
-
-                drawWatermark(ctxLightbox, maximizedCanvas.width, maximizedCanvas.height,
-                             lightboxWatermarkText, lightboxWatermarkColor, lightboxWatermarkFont, watermarkRotationDefault);
-            }
+        img.onload = () => {
+            loadedLightboxImage = img; // Armazena a imagem carregada globalmente
+            drawLightboxContent(loadedLightboxImage, shouldWatermarkLightbox, zoomState); // Desenha
         };
 
-        imgLightbox.onerror = () => {
+        img.onerror = () => {
             console.error('Erro ao carregar a imagem para o lightbox:', src);
-            maximizedCanvas.width = 400;
+            maximizedCanvas.width = 400; // Define um tamanho padrão para canvas de erro
             maximizedCanvas.height = 300;
             ctxLightbox.font = '30px Arial';
             ctxLightbox.fillStyle = 'red';
@@ -142,14 +90,160 @@ document.addEventListener('DOMContentLoaded', () => {
             updateNavButtons();
         };
     }
+
+    // Função que desenha o conteúdo do lightbox, usando a imagem JÁ CARREGADA
+    function drawLightboxContent(imgToDraw, shouldWatermarkLightbox, zoomState) {
+        if (!imgToDraw) return; // Garante que a imagem esteja carregada
+
+        const imgLightbox = imgToDraw; // A imagem já carregada
+        let finalRenderWidth, finalRenderHeight;
+        const zoomFactor = 1.5; // Fator de zoom
+
+        // --- PASSO 1: CALCULAR O TAMANHO DA IMAGEM SE ESTIVESSE AJUSTADA À TELA (BASE) ---
+        const maxWidthFit = window.innerWidth * 0.9;
+        const maxHeightFit = window.innerHeight * 0.9;
+
+        let baseRenderWidth = imgLightbox.width;
+        let baseRenderHeight = imgLightbox.height;
+
+        // Ajusta a imagem para caber na tela (calcula o tamanho base)
+        if (baseRenderWidth > maxWidthFit) {
+            baseRenderHeight = (maxWidthFit / baseRenderWidth) * baseRenderHeight;
+            baseRenderWidth = maxWidthFit;
+        }
+        if (baseRenderHeight > maxHeightFit) {
+            baseRenderWidth = (maxHeightFit / baseRenderHeight) * baseRenderWidth;
+            baseRenderHeight = maxHeightFit;
+        }
+        // --- FIM DO CÁLCULO BASE ---
+
+        // --- PASSO 2: DETERMINAR O TAMANHO FINAL COM BASE NO ZOOM ---
+        if (zoomState) { // Se estiver em modo zoom
+            finalRenderWidth = baseRenderWidth * zoomFactor;
+            finalRenderHeight = baseRenderHeight * zoomFactor;
+
+            // NOVO: Limitando o zoom máximo para não criar um canvas GIGANTE desnecessário
+            const maxAllowedZoomWidth = Math.min(imgLightbox.width * 2, 2000); // 2x original ou 2000px
+            const maxAllowedZoomHeight = Math.min(imgLightbox.height * 2, 2000);
+
+            if (finalRenderWidth > maxAllowedZoomWidth) {
+                finalRenderHeight = (maxAllowedZoomWidth / finalRenderWidth) * finalRenderHeight;
+                finalRenderWidth = maxAllowedZoomWidth;
+            }
+            if (finalRenderHeight > maxAllowedZoomHeight) {
+                finalRenderWidth = (maxAllowedZoomHeight / finalRenderHeight) * finalRenderWidth;
+                finalRenderHeight = maxAllowedZoomHeight;
+            }
+
+            // Garante que o canvas seja grande o suficiente para a imagem ampliada
+            maximizedCanvas.width = finalRenderWidth;
+            maximizedCanvas.height = finalRenderHeight;
+
+            // Ao ativar o zoom pela primeira vez, centraliza a imagem no canvas
+            if (!isPanning && (currentPanX === 0 && currentPanY === 0)) {
+                // Calcula o offset inicial para centralizar a imagem ampliada dentro do canvas
+                // currentPanX e currentPanY devem ser o canto superior esquerdo da imagem ampliada
+                currentPanX = (maximizedCanvas.width - finalRenderWidth) / 2;
+                currentPanY = (maximizedCanvas.height - finalRenderHeight) / 2;
+            }
+
+        } else { // Ajustar à tela
+            finalRenderWidth = baseRenderWidth;
+            finalRenderHeight = baseRenderHeight;
+
+            maximizedCanvas.width = finalRenderWidth;
+            maximizedCanvas.height = finalRenderHeight;
+            currentPanX = 0; // Zera pan ao voltar ao normal
+            currentPanY = 0;
+        }
+
+        ctxLightbox.clearRect(0, 0, maximizedCanvas.width, maximizedCanvas.height);
+        // DESENHA A IMAGEM COM OS OFFSETS DO PAN
+        // (currentPanX, currentPanY) é o canto superior esquerdo ONDE a imagem será desenhada no canvas
+        ctxLightbox.drawImage(imgLightbox, currentPanX, currentPanY, finalRenderWidth, finalRenderHeight);
+
+        // Sempre aplica a marca d'água DEPOIS da imagem
+        if (shouldWatermarkLightbox) {
+            const lightboxWatermarkText = watermarkTextDefault;
+            const lightboxWatermarkColor = 'rgba(0, 0, 0, 0.3)';
+            const lightboxWatermarkFont = 'bold 20px Playfair Display';
+
+            drawWatermark(ctxLightbox, maximizedCanvas.width, maximizedCanvas.height,
+                         lightboxWatermarkText, lightboxWatermarkColor, lightboxWatermarkFont, watermarkRotationDefault);
+        }
+    }
+
+    // --- Lógica de Pan (Arrastar) ---
+    maximizedCanvas.addEventListener('mousedown', (e) => {
+        if (!isZoomed) return; // Só permite pan se estiver com zoom
+        isPanning = true;
+        maximizedCanvas.style.cursor = 'grabbing';
+        // Guarda a posição inicial do mouse e o offset atual da imagem
+        startPanX = e.clientX;
+        startPanY = e.clientY;
+    });
+
+    maximizedCanvas.addEventListener('mousemove', (e) => {
+        if (!isPanning || !isZoomed) return; // Só faz pan se estiver arrastando E com zoom
+
+        // Calcula o delta do movimento do mouse
+        const dx = e.clientX - startPanX;
+        const dy = e.clientY - startPanY;
+
+        // Atualiza os offsets do pan
+        currentPanX += dx;
+        currentPanY += dy;
+
+        // Opcional: Adicionar limites ao pan para não sair da imagem
+        // Isso é mais complexo. Aqui, o pan é livre.
+
+        startPanX = e.clientX; // Reseta o ponto de início para o próximo movimento
+        startPanY = e.clientY;
+
+        // Redesenha o conteúdo do lightbox com os novos offsets de pan
+        const currentSrc = currentGalleryImages[currentImageIndex]; // Pega a URL da imagem atual
+        const originalCanvas = document.querySelector('.gallery canvas[data-original-src="' + currentSrc + '"]');
+        const shouldWatermark = originalCanvas ? originalCanvas.getAttribute('watermark-display') === 'true' : false;
+
+        drawLightboxContent(loadedLightboxImage, shouldWatermark, isZoomed); // Redesenha usando a imagem já carregada
+    });
+
+    maximizedCanvas.addEventListener('mouseup', () => {
+        isPanning = false;
+        if (isZoomed) {
+            maximizedCanvas.style.cursor = 'grab';
+        } else {
+            maximizedCanvas.style.cursor = 'default';
+        }
+    });
+
+    maximizedCanvas.addEventListener('mouseleave', () => { // Caso o mouse saia do canvas enquanto arrasta
+        isPanning = false;
+        maximizedCanvas.style.cursor = 'default';
+    });
+
+    // Cursor grab/default
+    maximizedCanvas.addEventListener('mouseenter', () => {
+        if (isZoomed && !isPanning) {
+            maximizedCanvas.style.cursor = 'grab';
+        }
+    });
+    maximizedCanvas.addEventListener('mouseleave', () => {
+        maximizedCanvas.style.cursor = 'default';
+    });
+
     // --- NOVO: Lógica de Zoom com Duplo Clique/Tap ---
     maximizedCanvas.addEventListener('dblclick', () => {
+        if (!loadedLightboxImage) return; // Garante que há uma imagem para dar zoom
+
         const currentSrc = currentGalleryImages[currentImageIndex];
         const originalCanvas = document.querySelector('.gallery canvas[data-original-src="' + currentSrc + '"]');
         const shouldWatermark = originalCanvas ? originalCanvas.getAttribute('watermark-display') === 'true' : false;
 
         isZoomed = !isZoomed; // Alterna o estado do zoom
-        drawLightboxContent(currentSrc, shouldWatermark, isZoomed);
+        currentPanX = 0; // Zera o pan ao aplicar/remover o zoom (para evitar que a imagem voe para longe)
+        currentPanY = 0;
+        drawLightboxContent(loadedLightboxImage, shouldWatermark, isZoomed); // Redesenha com o novo estado de zoom
     });
 
 
@@ -160,7 +254,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const shouldWatermark = originalCanvas ? originalCanvas.getAttribute('watermark-display') === 'true' : false;
 
         isZoomed = false; // Sempre reseta o zoom ao navegar para outra imagem
-        drawLightboxContent(src, shouldWatermark, false); // Desenha a nova imagem ajustada à tela
+        isPanning = false; // Reseta o pan ao navegar
+        currentPanX = 0; // Reseta a posição do pan ao navegar
+        currentPanY = 0;
+        loadedLightboxImage = null; // Zera a imagem para forçar um novo carregamento
+
+        loadImageAndDraw(src, shouldWatermark, false); // Desenha a nova imagem ajustada à tela
         updateNavButtons();
     }
 
