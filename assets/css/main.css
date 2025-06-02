@@ -484,3 +484,49 @@ footer a:hover {
         font-size: 0.9rem;
     }
 }
+
+/* Estilos para os Botões de Navegação Laterais */
+.side-nav-button {
+    position: fixed; /* Fixa o botão na viewport */
+    top: 50%;
+    transform: translateY(-50%); /* Centraliza verticalmente */
+    background: rgba(0, 0, 0, 0.4); /* Fundo semi-transparente */
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-size: 2rem; /* Tamanho da seta */
+    cursor: pointer;
+    z-index: 999; /* Acima do conteúdo principal, mas abaixo do lightbox */
+    border-radius: 8px; /* Cantos arredondados */
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    opacity: 1; /* Visível por padrão, será controlado por JS */
+    display: flex; /* Para centralizar o conteúdo (seta) */
+    align-items: center;
+    justify-content: center;
+}
+
+.side-nav-button:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.6); /* Mais escuro ao passar o mouse */
+}
+
+.side-nav-button:disabled {
+    opacity: 0.2; /* Mais transparente quando desabilitado */
+    cursor: not-allowed;
+    pointer-events: none; /* Desabilita cliques */
+}
+
+.prev-button {
+    left: 10px; /* Posição à esquerda */
+}
+
+.next-button {
+    right: 10px; /* Posição à direita */
+}
+
+/* Esconder os botões laterais por padrão em mobile (opcional, mas recomendado para não sobrecarregar a UI) */
+@media (max-width: 480px) {
+    .side-nav-button {
+        padding: 7.5px 10px;
+        /*display: none; */
+    }
+}

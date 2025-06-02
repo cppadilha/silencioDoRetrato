@@ -379,6 +379,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentPage = 1;
         let totalPages = 0;
 
+        // NOVO: Referências aos botões laterais
+        const navPrevSide = document.getElementById('nav-prev-side');
+        const navNextSide = document.getElementById('nav-next-side');
+
         // NOVO: Função para calcular itens por página com base na largura da janela
         function calculateItemsPerPage() {
             // Se a largura da janela for menor ou igual a 768px (ou o breakpoint que preferir para mobile)
@@ -443,6 +447,18 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 paginationControls.style.display = 'flex'; // Garante que esteja visível se houver mais de 1 página
             }
+
+            // NOVO: Atualiza a visibilidade dos botões laterais
+            //if (totalPages <= 1 || window.innerWidth <= 480) { // Esconde se só tiver 1 página ou se for mobile
+            //    navPrevSide.style.display = 'none';
+            //    navNextSide.style.display = 'none';
+            //} else {
+                navPrevSide.style.display = 'flex'; // Exibe para desktop
+                navNextSide.style.display = 'flex';
+
+                navPrevSide.disabled = currentPage === 1;
+                navNextSide.disabled = currentPage === totalPages;
+            //}
         }
 
         // NOVO: Função para inicializar/reinicializar a paginação
@@ -462,6 +478,19 @@ document.addEventListener('DOMContentLoaded', () => {
             resizeTimeout = setTimeout(() => {
                 initializePagination(); // Reinicializa a paginação
             }, 250); // Pequeno atraso para evitar recalcular demais durante o redimensionamento
+        });
+
+        // NOVO: Event listeners para os botões laterais
+        navPrevSide.addEventListener('click', () => {
+            if (currentPage > 1) {
+                displayItems(currentPage - 1);
+            }
+        });
+
+        navNextSide.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                displayItems(currentPage + 1);
+            }
         });
     }
 });
