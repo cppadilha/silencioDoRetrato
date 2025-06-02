@@ -369,4 +369,99 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     processGalleryImages();
+
+        // --- Lógica de Paginação da Página Principal (index.html) ---
+    // Esta lógica de paginação só deve ser executada na página principal (index.html)
+    if (document.querySelector('.grid-covers')) { // Verifica se é a página principal
+        const paginationControls = document.getElementById('pagination-controls');
+        const coverCards = Array.from(document.querySelectorAll('.grid-covers .cover-card'));
+        let itemsPerPage = 0; // Será definido dinamicamente
+        let currentPage = 1;
+        let totalPages = 0;
+
+        // NOVO: Função para calcular itens por página com base na largura da janela
+        function calculateItemsPerPage() {
+            // Se a largura da janela for menor ou igual a 768px (ou o breakpoint que preferir para mobile)
+            if (window.innerWidth <= 768) {
+                itemsPerPage = 1; // 1 card por página no celular
+            } else {
+                itemsPerPage = 3; // 3 cards por página no desktop (ajuste para o seu padrão)
+            }
+        }
+
+        function displayItems(page) {
+            currentPage = page;
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            coverCards.forEach((card, index) => {
+                if (index >= start && index < end) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            updatePaginationControls(); // Atualiza os botões e números de página
+        }
+
+        function updatePaginationControls() {
+            paginationControls.innerHTML = ''; // Limpa os controles existentes
+
+            // Recalcula totalPages (importante se itemsPerPage mudou)
+            totalPages = Math.ceil(coverCards.length / itemsPerPage);
+
+            // Botão "Anterior"
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'Anterior';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => displayItems(currentPage - 1));
+            paginationControls.appendChild(prevButton);
+
+            // Números das páginas
+            for (let i = 1; i <= totalPages; i++) {
+                const pageNumberButton = document.createElement('button');
+                pageNumberButton.textContent = i;
+                pageNumberButton.classList.add('page-number');
+                if (i === currentPage) {
+                    pageNumberButton.classList.add('active');
+                }
+                pageNumberButton.addEventListener('click', () => displayItems(i));
+                paginationControls.appendChild(pageNumberButton);
+            }
+
+            // Botão "Próximo"
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'Próximo';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => displayItems(currentPage + 1));
+            paginationControls.appendChild(nextButton);
+
+            // Esconde os controles se houver apenas 1 página
+            if (totalPages <= 1) {
+                paginationControls.style.display = 'none';
+            } else {
+                paginationControls.style.display = 'flex'; // Garante que esteja visível se houver mais de 1 página
+            }
+        }
+
+        // NOVO: Função para inicializar/reinicializar a paginação
+        function initializePagination() {
+            calculateItemsPerPage(); // Define quantos itens por página
+            currentPage = 1; // Reseta para a primeira página
+            displayItems(currentPage); // Exibe os itens da primeira página
+        }
+
+        // Inicializa a paginação ao carregar a página
+        initializePagination();
+
+        // NOVO: Atualiza a paginação ao redimensionar a janela (para lidar com mudança de mobile/desktop)
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                initializePagination(); // Reinicializa a paginação
+            }, 250); // Pequeno atraso para evitar recalcular demais durante o redimensionamento
+        });
+    }
 });
