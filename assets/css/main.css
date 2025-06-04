@@ -164,7 +164,7 @@ main.grid-covers {
 }
 .about-container a:hover {
     text-decoration: underline;
-    color: var(--color-dark);
+    color: var(--accent-dark);
 }
 
 /* Zine General Content Styles */
@@ -437,7 +437,7 @@ footer a:hover {
 }
 
 .pagination-controls button:hover:not(:disabled) {
-    background-color: var(--color-dark);
+    background-color: var(--accent-dark);
 }
 
 .pagination-controls button:disabled {
@@ -458,7 +458,7 @@ footer a:hover {
 }
 
 .pagination-controls .page-number.active {
-    background-color: var(--color-dark);
+    background-color: var(--accent-dark);
     color: white;
 }
 .theme-dark .pagination-controls .page-number.active {
