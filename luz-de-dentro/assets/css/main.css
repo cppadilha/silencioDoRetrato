@@ -1,5 +1,5 @@
 .section-abertura-background {
-    background-image: url('../images/Cover.jpg'); /* O caminho para sua imagem */
+    background-image: url('https://live.staticflickr.com/65535/54567177701_8e9a6fd8aa_b.jpg'); /* O caminho para sua imagem */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
