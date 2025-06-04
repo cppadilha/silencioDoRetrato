@@ -4,7 +4,7 @@
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: scroll; /* A imagem rola com a seção */
-    /*background-attachment: fixed; /* <--- Esta linha causa o efeito de paralaxe */
+    /* background-attachment: fixed; */ /* <--- Esta linha causa o efeito de paralaxe */
 
     padding: 80px 20px;
     min-height: 400px; /* Garante altura suficiente para a imagem e conteúdo */
