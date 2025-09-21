@@ -523,6 +523,18 @@ footer a:hover {
     right: 10px; /* Posição à direita */
 }
 
+.content-center {
+    display: flex;          /* Ativa o flexbox */
+    align-items: center;    /* Centraliza os itens verticalmente (no eixo cruzado) */
+    justify-content: center; /* Centraliza os itens horizontalmente (no eixo principal) */
+    flex-direction: column; /* Garante que os itens fiquem em coluna */
+    text-align: center;    /* Garante que o próprio texto seja centralizado dentro do h2 */
+}
+
+.content-single {
+    width: 400px;
+}
+
 /* Esconder os botões laterais por padrão em mobile (opcional, mas recomendado para não sobrecarregar a UI) */
 @media (max-width: 480px) {
     .side-nav-button {
