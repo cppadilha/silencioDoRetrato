@@ -92,6 +92,30 @@ nav.main-nav a:hover {
     background-color: var(--accent-dark);
 }
 
+.theme-toggle-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem; /* Tamanho do ícone */
+    color: var(--text-light);
+    transition: color 0.3s ease;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.theme-dark .theme-toggle-button {
+    color: var(--text-dark);
+}
+
+.theme-toggle-button:hover {
+    color: var(--accent-light);
+}
+
+.theme-dark .theme-toggle-button:hover {
+    color: var(--accent-dark);
+}
+
 /* Home Page Covers */
 main.grid-covers {
   display: grid;
