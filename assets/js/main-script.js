@@ -319,6 +319,16 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.restore();
     }
 
+    function setupCanvasClickHandler(canvasElement, originalSrc, shouldDisplayWatermark) {
+        canvasElement.onclick = () => {
+            //const parentGallery = canvasElement.closest('.gallery');
+            //currentGalleryImages = Array.from(parentGallery.querySelectorAll('canvas[data-original-src]')).map(canvas => canvas.getAttribute('data-original-src'));
+            currentGalleryImages = Array.from(document.querySelectorAll('.gallery canvas[data-original-src]')).map(canvas => canvas.getAttribute('data-original-src'));
+            currentImageIndex = currentGalleryImages.indexOf(originalSrc);
+            openLightbox(originalSrc, shouldDisplayWatermark);
+        };
+    }
+
     function processImage(canvasElement) {
         const originalSrc = canvasElement.getAttribute('data-original-src');
         const shouldDisplayWatermark = canvasElement.getAttribute('watermark-display') === 'true';
@@ -339,12 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
                              watermarkTextDefault, watermarkColorDefault, watermarkFontDefault, watermarkRotationDefault);
             }
 
-            canvasElement.onclick = () => {
-                currentGalleryImages = Array.from(document.querySelectorAll('.gallery canvas[data-original-src]')).map(canvas => canvas.getAttribute('data-original-src'));
-                currentImageIndex = currentGalleryImages.indexOf(originalSrc);
-
-                openLightbox(originalSrc, shouldDisplayWatermark);
-            };
+            setupCanvasClickHandler(canvasElement, originalSrc, shouldDisplayWatermark);
         };
 
         img.onerror = () => {
@@ -353,11 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fillStyle = 'red';
             ctx.textAlign = 'center';
             ctx.fillText('Erro ao carregar', canvasElement.width / 2, canvasElement.height / 2);
-            canvasElement.onclick = () => {
-                currentGalleryImages = Array.from(document.querySelectorAll('.gallery canvas[data-original-src]')).map(canvas => canvas.getAttribute('data-original-src'));
-                currentImageIndex = currentGalleryImages.indexOf(originalSrc);
-                openLightbox(originalSrc, shouldDisplayWatermark);
-            };
+            setupCanvasClickHandler(canvasElement, originalSrc, shouldDisplayWatermark);
         };
     }
 
