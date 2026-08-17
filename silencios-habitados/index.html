@@ -28,7 +28,7 @@
     gtag("js", new Date());
     gtag("config", "G-Q7EWY2RP2B");
   </script>
-  <body data-default-theme="light">
+  <body data-default-theme="dark">
     <header>
       <h1>Silêncios Habitados</h1>
       <p>Série fotográfica por <i>Carla Padilha</i></p>
@@ -282,5 +282,11 @@
     </footer>
     <script src="../assets/js/main-script.js"></script>
     <script src="../assets/js/theme-switcher.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        document.body.classList.remove('theme-light');
+        document.body.classList.add('theme-dark');
+      });
+    </script>
   </body>
 </html>
