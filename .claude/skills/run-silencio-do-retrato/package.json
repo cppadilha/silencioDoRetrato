@@ -1,0 +1,9 @@
+{
+  "name": "run-silencio-do-retrato",
+  "private": true,
+  "type": "module",
+  "description": "Driver harness for the Silêncio do Retrato static zine site",
+  "dependencies": {
+    "playwright": "^1.62.1"
+  }
+}
